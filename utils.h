@@ -13,3 +13,5 @@ static inline int die(const char *msg) {
     perror(msg);
     return 1;
 }
+
+#endif

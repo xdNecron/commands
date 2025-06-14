@@ -9,38 +9,25 @@
   Concatenate srcfd.
 
   Steps:
-    1. Open and read srcfd.
-    2. Write contents of srcfd to stdout.
+    1. Open srcf
+    2. Incrementally write contents of srcf to stdout
  */
-
-#define BUFSIZE 1024
-
-int die(char *err) {
-  perror(err);
-  return 1;
-}
 
 int main(int argc, char *argv[]) {
 
   if (argc != 2) return 1;
 
-  int len = BUFSIZE;
-  char *c = malloc(len);
+  char buffer[BUFSIZE];
 
   int src_fd;
-  ssize_t src_rd;
+  ssize_t src_rd, dst_wr;
 
   // STEP 1: Open and read srcfd
   if ((src_fd = open(argv[1], O_RDONLY)) == -1) return die("src_fd");
 
-  while ((src_rd = read(src_fd, c, len)) > 0) {
-    if (src_rd == BUFSIZE) {
-        len += BUFSIZE;
-        c = realloc(c, len);
-    }
+  while ((src_rd = read(src_fd, buffer , BUFSIZE)) > 0) {
+    if ((dst_wr = write(STDOUT_FILENO, buffer, src_rd)) != src_rd) return die("dst_wr");
   }
-
-  fprintf(stdout, "%s", c);
 
   return 0;
 }
