@@ -5,3 +5,7 @@ various technologies, such as shell or terminal-based text editor, but those did
 
 ![POSIX.1-2008 commands listed by the one and only ChatGPT](command_list.png "Command list")
 
+## Completed commands
+
+After I fully recreate a command with all its features, it will be listed here.
+
