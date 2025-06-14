@@ -7,6 +7,11 @@
 /* cp command
    Takes in 2 args (no flags for now): srcpath, dstpath. Copies contents of srcpath to dstpath.
 
+   TODO
+   [ ] Add usage error handling
+   [ ] Add flag handling
+   [ ] Add recursive copying
+
    Steps:
     1. Open srcpath.
     2. Read srcpath contents to new buffer.
