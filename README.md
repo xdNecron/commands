@@ -7,5 +7,9 @@ various technologies, such as shell or terminal-based text editor, but those did
 
 ## Completed commands
 
-After I fully recreate a command with all its features, it will be listed here.
+Listed commands are WIP. Checked are fully completed.
 
+- [ ] **cat**
+- [ ] **cp** - add recursive mode
+- [ ] **rm** - add recursive mode
+- [ ] **mv**
