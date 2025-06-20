@@ -14,4 +14,9 @@ static inline int die(const char *msg) {
     return 1;
 }
 
+static inline int diefn(const char *msg) {
+    perror(msg);
+    return -1;
+}
+
 #endif
