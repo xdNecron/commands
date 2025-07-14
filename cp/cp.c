@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE 500
+
 #include <unistd.h>
 #include <getopt.h>
 #include <stdio.h>
@@ -5,7 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
 #include "utils.h"
+#include <ftw.h>
 
 /* cp command
    Takes in 2 args (no flags for now): srcdir, dstdir. Copies contents of srcdir to dstdir.
@@ -24,15 +29,17 @@
     6. Close dstdir.
  */
 
+/*** DEFINES ***/
+
 #define CP_OPTSTR "fr"
 
 #define OPT_R 'r'
 #define OPT_F 'f'
 
-/*** FLAGS ***/
+/*** FLAG PROCESSING ***/
 
 int opt_r = 0; /* recursive mode */
-int opt_f = 0; /* force */
+int opt_f = 0; /* force ??? */
 
 int process_opts(int argc, char *argv[]) {
 
@@ -51,32 +58,53 @@ int process_opts(int argc, char *argv[]) {
         return -1;
     }
   }
+
   // Is it even necessary to return the index of first FILE argument?
   /* return optind; */
   return 0; // returns success for now
 }
 
-int reccpy(int *src, int *dst) {
-  printf("Tisknu kundy\n");
-  return 0;
-}
-
-int copy(int *src, int *dst) {
+// copies target from src to dst
+int copy_target(int *src, int *dst) {
 
   ssize_t src_rd, dst_wr;
   char buffer[BUFSIZE];
 
-  if (opt_r == 1) {
-    if (reccpy(src, dst) == -1) return diefn("reccpy");
-  } else {
-    while ((src_rd = read(*src, buffer, BUFSIZE)) > 0) {
-      if ((dst_wr = write(*dst, buffer, src_rd)) != src_rd) return diefn("dst_wr");
-    }
+  while ((src_rd = read(*src, buffer, BUFSIZE)) > 0) {
+    if ((dst_wr = write(*dst, buffer, src_rd)) != src_rd) return diefn("dst_wr");
   }
 
   return 0;
+
 }
 
+int _copy_target(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+
+  /* handling typeflag logic */
+
+  if (typeflag == FTW_F) printf("file\n");
+
+  printf("%s", fpath);
+
+  return 0;
+
+}
+
+// manages the whole copying process
+int run_copy(int *src, int *dst) {
+
+  int flags = FTW_PHYS;
+
+  if (opt_r == 1) {
+    printf("Recursive option used.\n");
+    if (nftw(, _copy_target, 20, flags) == -1) return diefn("nftw");
+  } else {
+    if ((copy_target(src, dst)) == -1) return diefn("copy_target");
+  }
+
+  return 0;
+
+}
 
 int main(int argc, char *argv[]) {
 
@@ -108,7 +136,7 @@ int main(int argc, char *argv[]) {
   dst_fd = open(argv[argc - 1], open_flags, file_perms);
   if (dst_fd == -1) return die("dst_fd");
 
-  if ((copy(&src_fd, &dst_fd)) == -1) return die("copy");
+  if ((run_copy(&src_fd, &dst_fd)) == -1) return die("run_copy");
 
   // STEP 6: Close dstdir
   close(src_fd);
