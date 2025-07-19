@@ -1,4 +1,5 @@
 #define _XOPEN_SOURCE 500
+#define _LARGEFILE64_SOURCE
 
 #include <unistd.h>
 #include <getopt.h>
@@ -11,35 +12,32 @@
 #include <dirent.h>
 #include "utils.h"
 #include <ftw.h>
-
-/* cp command
-   Takes in 2 args (no flags for now): srcdir, dstdir. Copies contents of srcdir to dstdir.
-
-   TODO
-   [ ] Add usage error handling
-   [ ] Add flag handling
-   [ ] Add recursive copying
-
-   Steps:
-    1. Open srcdir.
-    2. Read srcdir contents to new buffer.
-    3. Close srcdir.
-    4. Open (or create) dstdir.
-    5. Write srcdir contents to dstdir.
-    6. Close dstdir.
- */
+#include <limits.h>
+#include <errno.h>
 
 /*** DEFINES ***/
 
-#define CP_OPTSTR "fr"
+#define CP_OPTSTR "sfrv"
 
 #define OPT_R 'r'
 #define OPT_F 'f'
+#define OPT_V 'v'
+#define OPT_S 's'
 
 /*** FLAG PROCESSING ***/
 
 int opt_r = 0; /* recursive mode */
-int opt_f = 0; /* force ??? */
+
+int opt_v = 0; /* verbose */
+int opt_d = 0; /* no-dereference */
+int opt_s = 0; /* make symbolic links instead of copying */
+int opt_f = 0; /* force: if an existing destination file cannot be
+                                 opened, remove it and try again (this option
+                                 is ignored when the -n option is also used) */
+
+/*** GLOBALS ***/
+char srcpath[PATH_MAX];
+char dstpath[PATH_MAX];
 
 int process_opts(int argc, char *argv[]) {
 
@@ -53,94 +51,120 @@ int process_opts(int argc, char *argv[]) {
       case OPT_F:
         opt_f = 1;
         break;
+      case OPT_V:
+        opt_v = 1;
+        break;
+      case OPT_S:
+        opt_s = 1;
+        break;
       default:
         fprintf(stderr, "%c: not a valid option\n", optopt);
         return -1;
     }
   }
 
-  // Is it even necessary to return the index of first FILE argument?
-  /* return optind; */
   return 0; // returns success for now
 }
 
-// copies target from src to dst
-int copy_target(int *src, int *dst) {
+// Is this the most optimal way to keep track of the cp destination?
+char *get_new_path(char *old_path, char *old_prefix, char *new_prefix) {
 
-  ssize_t src_rd, dst_wr;
-  char buffer[BUFSIZE];
+  if (strncmp(old_path, old_prefix, strlen(old_prefix)) != 0) return NULL;
 
-  while ((src_rd = read(*src, buffer, BUFSIZE)) > 0) {
-    if ((dst_wr = write(*dst, buffer, src_rd)) != src_rd) return diefn("dst_wr");
+  ssize_t new_len = strlen(new_prefix) + strlen(old_path) - strlen(old_prefix) + 2;
+  char *new_path = malloc(new_len);
+
+  if (!new_path) return NULL;
+
+  snprintf(new_path, new_len, "%s/%s\n", new_prefix, old_path + strlen(old_prefix));
+  return new_path;
+
+}
+
+int copy_file(char *srcpath, char *dstpath) {
+
+  int opensrc_flags = O_RDONLY | O_LARGEFILE;
+  int opendst_flags = O_WRONLY | O_TRUNC | O_CREAT | O_LARGEFILE;
+  int opendst_mode = S_IRUSR | S_IWUSR ;
+
+  int src_fd, dst_fd;
+  int bytes_read;
+
+  char readbuf[BUFSIZE];
+
+  if ((src_fd = open(srcpath, opensrc_flags)) == -1) return diefn("src_open");
+  if ((dst_fd = open(dstpath, opendst_flags, opendst_mode)) == -1) return diefn("dst_open");
+
+  while ((bytes_read = read(src_fd, readbuf, BUFSIZE)) > 0) {
+    if (write(dst_fd, readbuf, bytes_read) == -1) return diefn("write");
   }
+
+  close(src_fd);
+  close(dst_fd);
 
   return 0;
 
 }
 
-int _copy_target(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+int nftw_copy_target(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
 
   /* handling typeflag logic */
 
-  if (typeflag == FTW_F) printf("file\n");
+  if (typeflag == FTW_F) {
 
-  printf("%s", fpath);
+    char *dest = get_new_path(fpath, srcpath, dstpath);
 
-  return 0;
+    if (opt_v) printf("I'm handling a file :3 hehe\n");
 
-}
+    if (!dest) diefn("nftw_copy_target");
+    if (copy_file(fpath, dest) == -1) return diefn("nftw_copy_target");
 
-// manages the whole copying process
-int run_copy(int *src, int *dst) {
+  } else if (typeflag == FTW_D) {
 
-  int flags = FTW_PHYS;
+    char *newpath = get_new_path(fpath, srcpath, dstpath);
 
-  if (opt_r == 1) {
-    printf("Recursive option used.\n");
-    if (nftw(, _copy_target, 20, flags) == -1) return diefn("nftw");
-  } else {
-    if ((copy_target(src, dst)) == -1) return diefn("copy_target");
+    if (opt_v) printf("I'm handling a directory :3 hehe\n");
+    if (mkdir(newpath, S_IRUSR | S_IWUSR | S_IXUSR) == -1) return diefn("mkdir");
   }
 
   return 0;
-
 }
 
 int main(int argc, char *argv[]) {
 
-  struct stat finfo;
+  struct stat dst_sb;
 
-  if (stat(argv[argc - 2], &finfo) == -1) return die("stat");
+  int ftw_flags = FTW_PHYS;
 
+  // TODO this check fucking sucks
   if (argc < 3) {
     fprintf(stderr, "Usage: cp [ARGS] file1 file2\n");
     return 1;
   }
 
-  int src_fd, dst_fd;
-  int open_flags = O_CREAT | O_WRONLY | O_TRUNC;
-  mode_t file_perms  = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-
   if ((process_opts(argc, argv)) == -1) return 1;
 
-  if ((S_ISDIR(finfo.st_mode)) != 0 && opt_r == 0) {
-    fprintf(stderr, "%s: is a directory, use recursive mode\n", argv[1]);
-    return 1;
+  strncpy(srcpath, argv[optind], strlen(argv[optind]));
+  strncpy(dstpath, argv[optind + 1], strlen(argv[optind + 1]));
+
+  errno = 0;
+
+  if (stat(argv[optind + 1], &dst_sb) == -1) {
+    if (errno != ENOENT) return die("stat");
+  } else {
+    if (S_ISDIR(dst_sb.st_mode)) {
+      memset(dstpath, 0, sizeof(dstpath));
+      snprintf(dstpath, sizeof(dstpath), "%s/%s", argv[optind + 1], argv[optind]);
+    }
   }
 
-  // STEP 1: Open srcdir
-  src_fd = open(argv[argc - 2], O_RDONLY);
-  if (src_fd == -1) return die("src_fd");
-
-  // STEP 2: Open (or create) dstdir
-  dst_fd = open(argv[argc - 1], open_flags, file_perms);
-  if (dst_fd == -1) return die("dst_fd");
-
-  if ((run_copy(&src_fd, &dst_fd)) == -1) return die("run_copy");
-
-  // STEP 6: Close dstdir
-  close(src_fd);
-  close(dst_fd);
+  if (opt_r) {
+    if (opt_v) printf("I am going recursive >:3\n");
+    if (nftw(srcpath, nftw_copy_target, 20, ftw_flags) == -1)
+      return diefn("nftw");
+  } else {
+    if (copy_file(srcpath, dstpath) == -1) return die("copy_file");
+  }
 
   return 0;
 }
