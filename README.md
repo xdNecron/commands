@@ -9,7 +9,7 @@ various technologies, such as shell or terminal-based text editor, but those did
 
 Listed but unchecked commands are WIP. Checked commands are fully completed.
 
-- [ ] **cat**
+- [x] **cat**
 - [ ] **cp** - add recursive mode
 - [ ] **rm** - add recursive mode
 - [ ] **mv**
