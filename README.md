@@ -11,5 +11,5 @@ Listed but unchecked commands are WIP. Checked commands are fully completed.
 
 - [ ] **cat**
 - [X] **cp** - Included flags: r, v, P, s, f
-- [ ] **rm** - add recursive mode, force, and verbose
+- [ ] **rm** - finish `-f` implementation
 - [ ] **mv**
