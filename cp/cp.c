@@ -140,7 +140,7 @@ int nftw_copy_target(const char *fpath, const struct stat *sb, int typeflag, str
     if (!dest) diefn("nftw_copy_target");
     if (copy_file(fpath, dest) == -2) {
       if (opt_force) {
-        if (unlink(dest) == -1) return diefn("unlink");
+        if (remove(dest) == -1) return diefn("unlink");
         if (copy_file(fpath, dest) < 0) return diefn("force");
       } else {
         return diefn("nftw_copy_target");
