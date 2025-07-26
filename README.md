@@ -10,6 +10,6 @@ various technologies, such as shell or terminal-based text editor, but those did
 Listed but unchecked commands are WIP. Checked commands are fully completed.
 
 - [ ] **cat**
-- [ ] **cp** - add recursive mode
-- [ ] **rm** - add recursive mode
+- [X] **cp** - Included flags: r, v, P, v, f
+- [ ] **rm** - add recursive mode, force, and verbose
 - [ ] **mv**
