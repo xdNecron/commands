@@ -5,8 +5,9 @@
 #include <stdlib.h>
 #include <errno.h>
 
-// Macro for buffer size
-#define BUFSIZE 1024
+#define BUFSIZE 1024 /* default buffer size */
+
+#define NULLB 1 /* null byte macro for readability purposes */
 
 // Simple error handler
 static inline int die(const char *msg) {
