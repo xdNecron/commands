@@ -15,7 +15,6 @@
 #include <limits.h>
 #include <errno.h>
 
-
 /*** FLAG PROCESSING ***/
 
 #define CP_OPTSTR "sfrvP"
@@ -65,10 +64,9 @@ int process_opts(int argc, char *argv[]) {
     }
   }
 
-  return 0; // returns success for now
+  return 0; 
 }
 
-// Is this the most optimal way to keep track of the cp destination?
 char *get_new_path(char *old_path, char *old_prefix, char *new_prefix) {
 
   if (strncmp(old_path, old_prefix, strlen(old_prefix)) != 0) return NULL;
@@ -127,7 +125,10 @@ int copy_symlink(char *src, char *dst) {
 
 int nftw_copy_target(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
 
-  /* handling typeflag logic */
+  /* 
+  Executed by nftw during recursive copying. Handles tree structure and handling of individual nodes (files)
+  based on their type.
+  */
 
   char *dest = get_new_path(fpath, srcpath, dstpath);
   if (!dest) return diefn("nftw_copy_target");
@@ -163,8 +164,6 @@ int nftw_copy_target(const char *fpath, const struct stat *sb, int typeflag, str
 
 int main(int argc, char *argv[]) {
 
-  /* TODO check if dstpath already exists, force overwrite */
-
   struct stat dst_sb;
 
   int ftw_flags = FTW_PHYS;
@@ -198,7 +197,7 @@ int main(int argc, char *argv[]) {
     if (opt_noderef) {
       if (copy_symlink(srcpath, dstpath) == -1) return die("copy_symlink");
     } else if (opt_symlink) {
-      if (symlink(srcpath, dstpath) == -1) return diefn("symlink_target");
+      if (symlink(srcpath, dstpath) == -1) return die("symlink_target");
     } else {
       if (copy_file(srcpath, dstpath) == -1) return die("copy_file");
     }
