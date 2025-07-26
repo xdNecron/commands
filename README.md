@@ -9,7 +9,7 @@ various technologies, such as shell or terminal-based text editor, but those did
 
 Listed but unchecked commands are WIP. Checked commands are fully completed.
 
-- [ ] **cat**
+- [ ] **cat** - WIP
 - [X] **cp** - included flags: r, v, P, s, f
 - [X] **rm** - included flags: r, v, f; no prompting
 - [ ] **mv**
