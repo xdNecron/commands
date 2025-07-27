@@ -120,7 +120,7 @@ int cat_file(char *file) {
   }
 
   int src_fd;
-  ssize_t src_nrd, dst_nwr;
+  ssize_t src_nrd;
 
   if ((src_fd = open(file, O_RDONLY)) == -1) return die("src_fd");
 
