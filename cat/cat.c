@@ -16,7 +16,7 @@
 #define OPT_SHOWNONP 'v' /* use ^ and M- notation, except for LFD and TAB  DONE */
 #define OPT_SHOWTAB 'T' /* display TAB characters as ^I  DONE */
 #define OPT_SHOWEND 'E' /* display $ at the end of each line  DONE */
-#define OPT_SHOWNUM 'n'/* show line numbers  NS */
+#define OPT_SHOWNUM 'n'/* show line numbers  DONE */
 
 int opt_shownonp = 0;
 int opt_showtab = 0;
@@ -72,9 +72,16 @@ char *to_caret(unsigned char c) {
   return buf;
 }
 
-int process_text(char *buf, ssize_t bufsize) {
+int process_text(char *buf, ssize_t bufsize, int *linenum) {
 
   for (int i = 0; i < bufsize; i++) {
+
+    if (opt_shownum) {
+      if (*linenum == 1 || buf[i - 1] == '\n') {
+        printf("%6d ", *linenum);
+        *linenum += 1;
+      }
+    }
 
     if (opt_showend) {
       if (buf[i] == '\n') {
@@ -97,10 +104,6 @@ int process_text(char *buf, ssize_t bufsize) {
       }
     }
 
-    if (opt_shownum) {
-
-    }
-
     printf("%c", buf[i]);
   }
 
@@ -110,6 +113,7 @@ int process_text(char *buf, ssize_t bufsize) {
 int cat_file(char *file) {
 
   char *buffer = malloc(BUFSIZE);
+  int linenum = 1;
 
   if (!buffer) {
     return -1;
@@ -121,7 +125,7 @@ int cat_file(char *file) {
   if ((src_fd = open(file, O_RDONLY)) == -1) return die("src_fd");
 
   while ((src_nrd = read(src_fd, buffer, BUFSIZE)) > 0) {
-    process_text(buffer, src_nrd);
+    process_text(buffer, src_nrd, &linenum);
   }
 
   return 0;
