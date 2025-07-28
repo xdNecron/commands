@@ -5,6 +5,10 @@ various technologies, such as shell or terminal-based text editor, but those did
 
 ![POSIX.1-2008 commands listed by the one and only ChatGPT](command_list.png "POSIX.1-2008 commands listed by the one and only ChatGPT")
 
+## TODO
+
+- [ ] Add help option to all commands
+
 ## Completed commands
 
 Listed but unchecked commands are WIP. Checked commands are fully completed.

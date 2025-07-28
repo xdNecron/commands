@@ -1,1 +1,0 @@
-tvoje mamka
