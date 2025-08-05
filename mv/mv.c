@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE 700
+
 #include <asm-generic/errno-base.h>
 #include <linux/limits.h>
 #include <unistd.h>
@@ -7,6 +9,7 @@
 #include <sys/stat.h>
 #include <getopt.h>
 #include <errno.h>
+#include <string.h>
 
 #include "utils.h"
 
@@ -33,13 +36,13 @@ If you specify more than one of -i, -f, -n, only the final one takes effect\n\
 
 #define OPT_UPDATE 'u' /* move only when the SOURCE file is newer
                           than the destination file or when the
-                          destination file is missing  NS */
+                          destination file is missing  DONE */
 #define OPT_VERBOSE 'v' /* explain what is being done  DONE */
 #define OPT_TARGETDIR 't' /* move all SOURCE arguments into DIRECTORY  DONE */
-#define OPT_INTERACTIVE 'i' /* prompt before overwrite  NS */
-#define OPT_NOCLOB 'n' /* do not overwirte an existing file  NS */
-#define OPT_FORCE 'f' /* do not prompt before overwriting  NS */
-#define OPT_HELP 'h'
+#define OPT_INTERACTIVE 'i' /* prompt before overwrite  DONE */
+#define OPT_NOCLOB 'n' /* do not overwirte an existing file  DONE */
+#define OPT_FORCE 'f' /* do not prompt before overwriting  DONE */
+#define OPT_HELP 'h' /* DONE */
 /* If you specify more than one of -i, -f, -n, only the final one takes effect. */
 
 int opt_update = 0;
@@ -157,6 +160,28 @@ int move_source(char *src, char *dst, int tflag) {
     if (opt_verbose)
       printf("renamed \'%s\' -> \'%s\'\n", src, newdst);
     return 0;
+  }
+
+  if (dststat == 0 && opt_noclob)
+    return 0;
+
+  if (opt_update && srcsb.st_mtim.tv_sec <= dstsb.st_mtim.tv_sec) {
+    return 0;
+  }
+
+  /* TODO figure out memory leak warnings */
+  if (dststat == 0 && opt_interactive) {
+    char *input = malloc(BUFSIZE);
+
+    printf("mv: overwrite \'%s\'? ", dst);
+    input = fgets(input, BUFSIZE, stdin);
+
+    if (strcmp(input, "y\n") != 0) {
+      free(input);
+      return 0;
+    }
+
+    free(input);
   }
 
   if (rename(src, dst) == -1) diefn("rename");

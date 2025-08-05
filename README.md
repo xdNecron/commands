@@ -16,4 +16,4 @@ Listed but unchecked commands are WIP. Checked commands are fully completed.
 - [X] **cat** - included flags: v, T, E, A, n
 - [X] **cp** - included flags: r, v, P, s, f
 - [X] **rm** - included flags: r, v, f; no prompting
-- [ ] **mv** - WIP, implemented v, h, t 
+- [X] **mv** - included flags: v, h, n, i, f, u, t
