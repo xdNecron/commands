@@ -9,7 +9,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <dirent.h>
 #include "utils.h"
 #include <ftw.h>
 #include <limits.h>
@@ -71,7 +70,7 @@ char *get_new_path(char *old_path, char *old_prefix, char *new_prefix) {
 
   if (strncmp(old_path, old_prefix, strlen(old_prefix)) != 0) return NULL;
 
-  ssize_t new_len = strlen(new_prefix) + strlen(old_path) - strlen(old_prefix) + 2;
+  ssize_t new_len = (ssize_t)(strlen(new_prefix) + strlen(old_path) - strlen(old_prefix) + 2);
   char *new_path = malloc(new_len);
 
   if (!new_path) return NULL;

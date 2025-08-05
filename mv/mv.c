@@ -1,14 +1,11 @@
 #include <asm-generic/errno-base.h>
-#include <asm-generic/errno.h>
 #include <linux/limits.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <string.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <getopt.h>
-#include <limits.h>
 #include <errno.h>
 
 #include "utils.h"
@@ -37,8 +34,8 @@ If you specify more than one of -i, -f, -n, only the final one takes effect\n\
 #define OPT_UPDATE 'u' /* move only when the SOURCE file is newer
                           than the destination file or when the
                           destination file is missing  NS */
-#define OPT_VERBOSE 'v' /* explain what is being done  NS */
-#define OPT_TARGETDIR 't' /* move all SOURCE arguments into DIRECTORY  NS */
+#define OPT_VERBOSE 'v' /* explain what is being done  DONE */
+#define OPT_TARGETDIR 't' /* move all SOURCE arguments into DIRECTORY  DONE */
 #define OPT_INTERACTIVE 'i' /* prompt before overwrite  NS */
 #define OPT_NOCLOB 'n' /* do not overwirte an existing file  NS */
 #define OPT_FORCE 'f' /* do not prompt before overwriting  NS */
@@ -53,8 +50,7 @@ int opt_noclob = 0;
 int opt_force = 0;
 int opt_help = 0;
 
-char oarg_targetdir[BUFSIZE + NULLB];
-
+char oarg_targetdir[BUFSIZE];
 
 void process_flags(int argc, char *argv[]) {
 
@@ -154,17 +150,18 @@ int move_source(char *src, char *dst, int tflag) {
   if (tflag) {
     if (dsterr == ENOENT) {
       if (mkdir(dst, S_IRUSR | S_IWUSR | S_IXUSR) == -1) diefn("mkdir");
-      printf("made target dir\n");
     }
-    printf("tflag is set\n");
     char newdst[PATH_MAX];
     snprintf(newdst, PATH_MAX, "%s/%s", dst, src);
-    printf("%s\n", newdst);
     if (rename(src, newdst) == -1) diefn("rename");
+    if (opt_verbose)
+      printf("renamed \'%s\' -> \'%s\'\n", src, newdst);
     return 0;
   }
 
   if (rename(src, dst) == -1) diefn("rename");
+  if (opt_verbose)
+    printf("renamed \'%s\' -> \'%s\'\n", src, dst);
 
   return 0;
 }
@@ -191,7 +188,7 @@ int main(int argc, char *argv[]) {
   lastsrc = get_lastsrc(argc);
   scount = get_scount(argc);
 
-  printf("firstsrc: %d, lastsrc: %d, scount: %d\n", optind, lastsrc, scount);
+  // printf("firstsrc: %d, lastsrc: %d, scount: %d\n", optind, lastsrc, scount);
 
   if (scount > 1) dst_istarget = 1;
 
@@ -205,6 +202,8 @@ int main(int argc, char *argv[]) {
   for (int i = optind; i <= lastsrc; i++) {
     if (move_source(argv[i], dst, dst_istarget) == -1) exit(EXIT_FAILURE);
   }
+
+  free(dst);
 
   return 0;
 }

@@ -72,11 +72,8 @@ int copy(char *pathname, char *dstname, int flags) {
 
     if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
 
-      char *new_pathname;
-      char *new_dstname;
-
-      new_pathname = malloc(strlen(pathname) + strlen(entry->d_name) + 2);
-      new_dstname = malloc(strlen(dstname) + strlen(entry->d_name) + 2);
+      char *new_pathname = malloc(strlen(pathname) + strlen(entry->d_name) + 2);
+      char *new_dstname = malloc(strlen(dstname) + strlen(entry->d_name) + 2);
 
       sprintf(new_pathname, "%s/%s", pathname, entry->d_name);
       sprintf(new_dstname, "%s/%s", dstname, entry->d_name);
