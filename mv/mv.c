@@ -114,7 +114,7 @@ int get_lastsrc(int argc) {
   return lastsrc;
 }
 
-int get_scount(int argc) {
+int get_target_count(int argc) {
 
   int endindex;
   int scount = 0;
@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
   }
 
   lastsrc = get_lastsrc(argc);
-  scount = get_scount(argc);
+  scount = get_target_count(argc);
 
   // printf("firstsrc: %d, lastsrc: %d, scount: %d\n", optind, lastsrc, scount);
 

@@ -8,12 +8,23 @@ various technologies, such as shell or terminal-based text editor, but those did
 ## TODO
 
 - [ ] Add help option to all commands
+- [ ] Add version flag to all commands
+- [ ] Create long flags for at least one command
 
 ## Completed commands
 
 Listed but unchecked commands are WIP. Checked commands are fully completed.
 
+### File operations
+
 - [X] **cat** - included flags: v, T, E, A, n
 - [X] **cp** - included flags: r, v, P, s, f
 - [X] **rm** - included flags: r, v, f; no prompting
 - [X] **mv** - included flags: v, h, n, i, f, u, t
+- [ ] **ln** - WIP
+- [ ] **chmod** - Not started
+- [ ] **chown** - Not started
+- [ ] **mkdir** - Not started
+- [ ] **rmdir** - Not started
+- [ ] **mknod** - Not started
+- [ ] **readlink** - Not started
