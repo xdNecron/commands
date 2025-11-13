@@ -1,2 +1,2 @@
-cp: cp.c
-	$(GCC) cp.c -o cp -I.. -Wall -Wextra -pedantic -std=c99
+rec-copy: custom-rec-copy-alg.c
+	gcc custom-rec-copy-alg.c -o run -I.. -Wall -Wextra -pedantic -std=c99
